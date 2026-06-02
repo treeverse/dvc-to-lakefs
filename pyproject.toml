@@ -1,0 +1,110 @@
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "dvc-to-lakefs"
+description = "Zero-copy import of DVC-tracked data into lakeFS"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+dependencies = [
+    "dvc>=3.0,<4",
+    "lakefs>=0.16.0,<1",
+    "lakefs-sdk>=1.0,<2",
+    "typing_extensions>=4.0",
+]
+dynamic = ["version"]
+
+[project.scripts]
+lakectl-import-from-dvc = "dvc_to_lakefs.cli:main"
+
+[dependency-groups]
+typecheck = ["mypy", "ty", "pyrefly"]
+tests = [
+    "boto3==1.43.0",
+    "moto[server]==5.2.2",
+    "mypy==2.1.0",
+    "pytest>=9,<10",
+    "pytest-xdist>=3,<4",
+    "pytest-timeout>=2,<3",
+    "filelock",
+    "adlfs",
+    "dvc[testing]>=3.0",
+    "dvc-azure==3.1.1",
+    "dvc-gs==3.1.0",
+    "dvc-s3==3.3.0",
+]
+dev = [{ include-group = "tests" }, {include-group = "typecheck"}]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dvc_to_lakefs"]
+
+[tool.pytest]
+testpaths = ["tests"]
+timeout = "600"
+timeout_method = "thread"
+addopts = ["-n", "auto", "--dist", "loadgroup", "--benchmark-skip"]
+
+[tool.ruff]
+target-version = "py310"
+
+[tool.ruff.lint]
+ignore = [
+    "PLC0415",  # import-outside-top-level
+    "S101", # assert
+    "SIM105", # suppressible-exception
+    "SIM108",  # if-else-block-instead-of-if-exp
+    "TRY002", # raise-vanilla-class
+    "TRY003", # raise-vanilla-args
+    "TRY300", # try-consider-else
+]
+select = [
+    "F", "E", "W", "C90", "I", "N", "UP", "YTT", "ASYNC", "S", "BLE", "B", "A", "C4", "DTZ", "T10",
+    "EXE", "ISC", "ICN", "LOG", "G", "INP", "PIE", "T20", "PYI", "PT", "Q", "RSE", "RET",
+    "SLOT", "SIM", "TID", "TC", "ARG", "PGH", "PLC", "PLE", "PLR", "PLW", "TRY",
+    "FLY", "PERF", "FURB", "RUF", "RUF027", "RUF029", "RUF036", "ANN",
+]
+preview = true
+explicit-preview-rules = true
+
+[tool.ruff.lint.flake8-pytest-style]
+parametrize-names-type = "csv"
+
+[tool.ruff.lint.flake8-type-checking]
+strict = true
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S", "ARG001", "PLR2004", "PLR0913"]
+
+[tool.mypy]
+files = ["src", "tests"]
+strict = true
+warn_no_return = true
+warn_unreachable = true
+warn_unused_configs = true
+
+[[tool.mypy.overrides]]
+module = ["adlfs", "dvc.*", "dvc_azure.*", "dvc_gs.*", "dvc_s3.*"]
+ignore_missing_imports = true
+
+[tool.pyrefly]
+project-includes = [
+    "**/*.py*",
+    "**/*.ipynb",
+]
+search-path = ["src"]
+# Walk up from each importing file (bounded by the project root) so absolute
+# imports of test-support modules like `tests.conftest` resolve — project-includes
+# alone does not add the dir to the import path. Narrower than the `search-path =
+# ["."]` workaround. See https://github.com/facebook/pyrefly/issues/3005
+enable-fallback-search-path = true
+preset = "strict"
+
+[tool.uv]
+# Dependency cooldown
+exclude-newer = "1 week"
