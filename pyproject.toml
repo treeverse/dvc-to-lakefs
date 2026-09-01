@@ -24,8 +24,8 @@ lakectl-import-from-dvc = "dvc_to_lakefs.cli:main"
 typecheck = ["mypy", "ty", "pyrefly"]
 tests = [
     "boto3==1.43.0",
-    "moto[server]==5.2.2",
-    "mypy==2.1.0",
+    "moto[server]==5.2.3",
+    "mypy==2.3.1",
     "pytest>=9,<10",
     "pytest-xdist>=3,<4",
     "pytest-timeout>=2,<3",
